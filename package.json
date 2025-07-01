@@ -13,7 +13,12 @@
   "license": "MIT",
   "author": "MatzzDev",
   "type": "module",
-  "main": "index.js",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "exports": {
+    "import": "./index.js",
+    "require": "./index.cjs"
+  },
   "scripts": {
     "test": "node ."
   },

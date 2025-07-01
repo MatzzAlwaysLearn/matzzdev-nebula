@@ -1,12 +1,24 @@
-# Nebula WhatsApp Bot Module
+# 🚀 Nebula WhatsApp Bot Module
 
-Versi: **1.0.2**
-
-Nebula adalah modul WhatsApp multi-device berbasis [@whiskeysockets/baileys](https://github.com/WhiskeySockets/Baileys) yang mudah digunakan untuk pemula maupun developer lanjutan.
+**Versi:** 1.0.2  
+Nebula adalah modul WhatsApp multi-device berbasis [@whiskeysockets/baileys](https://github.com/WhiskeySockets/Baileys) yang dirancang agar mudah digunakan baik untuk pemula maupun developer lanjutan.
 
 ---
 
-## Instalasi
+## 🔥 Fitur Utama
+
+- **Multi-auth**: Multi session, nama folder auth fleksibel.
+- **Event Listener Simpel**: Daftarkan event WhatsApp dengan `.on()`.
+- **Custom Connection Log**: Kustomisasi log koneksi WhatsApp.
+- **Mode Command**: Pilih mode `case` (file case.js).
+- **Akses State & saveCreds**: Mudah dari instance Nebula.
+- **Restart Otomatis**: Disconnect/error? Bot auto-reconnect!
+- **Logger Lengkap**: Semua status koneksi dicatat detail.
+- **Tanpa Class Ribet**: API berbasis function & object.
+
+---
+
+## ⚡️ Instalasi
 
 ```bash
 npm install matzzdev-nebula
@@ -14,33 +26,35 @@ npm install matzzdev-nebula
 
 ---
 
-## Fitur Utama
+## 🚦 Getting Started
 
-- **Multi-auth**: Multi session dengan nama folder auth fleksibel.
-- **Event Listener Mudah**: Daftarkan event WhatsApp dengan `.on()` (kecuali `connection.update`).
-- **Custom Connection Log**: Kustomisasi log koneksi WhatsApp dengan `setConnectionLogHandler`.
-- **Mode Command**: Pilih mode `case` (file case.js).
-- **Akses State & saveCreds**: Langsung dari instance Nebula.
-- **Restart Otomatis**: Jika disconnect karena error, otomatis reconnect.
-- **Log Koneksi Lengkap**: Semua status koneksi dicatat detail.
-- **Tanpa Class**: API berbasis function dan object, bukan class.
+### 1. Import Nebula
+
+#### ESM (direkomendasikan)
+```js
+import createNebula from 'matzzdev-nebula';
+```
+
+#### CJS (require)
+```js
+const createNebula = require('matzzdev-nebula');
+```
 
 ---
 
-## Cara Penggunaan
-
-### 1. Import Nebula
-```js
-import createNebula from './index.js';
-```
-
 ### 2. Membuat Instance & Start
+
 ```js
 const nebula = await createNebula('MySession', 'case');
-// Tidak perlu .init() atau .ready(), langsung aktif setelah await
+// Bot langsung aktif setelah await!
 ```
+- **Argumen 1:** Nama folder auth (bebas, contoh: `'MySession'`)
+- **Argumen 2:** Mode command (default: `'case'`)
 
-### 3. Listen Event (kecuali 'connection.update')
+---
+
+### 3. Listen Event WhatsApp
+
 ```js
 nebula.on('messages.upsert', msg => {
     console.log('Pesan baru:', msg);
@@ -53,7 +67,10 @@ nebula.on({
 });
 ```
 
+---
+
 ### 4. Kustomisasi Log Koneksi
+
 ```js
 nebula.setConnectionLogHandler((update, log) => {
     if (update.connection === 'open') {
@@ -62,8 +79,11 @@ nebula.setConnectionLogHandler((update, log) => {
 });
 ```
 
+---
+
 ### 5. Mode Command 'case'
-- Buat file `case.js` di folder yang sama dengan `index.js`.
+
+- Buat file `case.js` di folder project Anda.
 - Export function yang menerima instance Nebula.
 - Contoh `case.js`:
     ```js
@@ -76,9 +96,26 @@ nebula.setConnectionLogHandler((update, log) => {
 
 ---
 
-## Command Detect
+## 🛠️ Konfigurasi Otomatis
 
-### Cara Menggunakan
+- Saat pertama kali dijalankan, file `config.js` otomatis dibuat di folder project Anda.
+- Edit file tersebut untuk mengatur owner, prefix, dsb.
+- Contoh isi awal:
+    ```js
+    export default {
+      owner: ['628xxxxxxx'],
+      prefix: {
+        listPrefix: ['#', '!', '/', '.'],
+        noPrefix: false
+      }
+    };
+    ```
+
+---
+
+## 🧑‍💻 Command Detect
+
+### Deteksi Command Otomatis
 
 ```js
 nebula.on('messages.upsert', async (msg) => {
@@ -90,82 +127,86 @@ nebula.on('messages.upsert', async (msg) => {
 
     if (nebula.commandDetect) {
         console.log('Command terdeteksi:', nebula.commandDetect);
-        // Contoh aksi:
         if (nebula.commandDetect === 'hai') {
             nebula.socket.sendMessage(m.key.remoteJid, { text: 'Halo juga!' }, { quoted: m });
         }
     }
 });
 ```
-
-- Prefix default: `#`, `!`, `/`, `.`
-- Tambah prefix: `nebula.listPrefix.push('$')`
-
----
-
-## Konfigurasi
-
-Saat pertama kali dijalankan, file `config.js` akan otomatis dibuat di folder project Anda (bukan di dalam folder module).  
-Silakan edit file tersebut untuk mengatur owner, prefix, dan konfigurasi lain sesuai kebutuhan Anda.
-
-## Cara Menggunakan Serialize
-
-Untuk memproses pesan WhatsApp, gunakan modul `Serialize` (akses langsung dari `nebula.smsg`) agar pesan lebih mudah di-handle di command handler/case.
-
-### Contoh Penggunaan di main file
-
-```js
-const nebula = await createNebula('MySession', 'case');
-import config from './config.js'
-const sock = nebula.socket
-// Tidak perlu import Serialize, cukup akses dari nebula.smsg
-export default function handler(nebula) {
-  nebula.on('messages.upsert', async (msg) => {
-    // Ambil pesan pertama (atau sesuaikan dengan kebutuhan)
-    const m = msg.messages[0];
-    // Buat objek serialize
-    const sMsg = new nebula.smsg(m, sock, config);
-
-    // Contoh penggunaan:
-    if (sMsg.isCmd) {
-      if (sMsg.command === 'ping') {
-        await sMsg.reply('Pong!');
-      }
-      // hanya contoh gunakan logika anda sendiri
-    }
-  });
-}
-```
-
-### Penjelasan
-
-- `Serialize` bisa diakses langsung dari `nebula.smsg`.
-- Menerima 3 parameter: pesan, socket (conn), dan config.
-- Prefix dan otomatis terdeteksi dari config.
+- **Prefix default:** `#`, `!`, `/`, `.`
+- **Tambah prefix:** `nebula.listPrefix.push('$')`
 
 ---
 
-## Cara Import (ESM & CJS)
+## 📦 Serialize: Cara Mudah Handle Pesan
 
-**ESM (rekomendasi, .mjs atau package.json type: module):**
+### Kenapa Serialize?
+Agar pesan WhatsApp jadi lebih mudah diolah di handler/command.
+
+### Cara Pakai
+
 ```js
+// ESM
 import createNebula from 'matzzdev-nebula';
+const nebula = await createNebula();
+const sMsg = new nebula.smsg(msg, nebula.socket, nebula.config);
+
+// CJS
+const createNebula = require('matzzdev-nebula');
+(async () => {
+    const nebula = await createNebula();
+    const sMsg = new nebula.smsg(msg, nebula.socket, nebula.config);
+})();
 ```
 
-**CJS (require):**
+### Contoh di Handler
+
 ```js
-const createNebula = require('matzzdev-nebula');
+nebula.on('messages.upsert', async (msg) => {
+    const m = msg.messages[0];
+    const sMsg = new nebula.smsg(m, nebula.socket, nebula.config);
+
+    if (sMsg.isCmd) {
+        if (sMsg.command === 'ping') {
+            await sMsg.reply('Pong!');
+        }
+        // Tambahkan command lain sesuai kebutuhan
+    }
+});
 ```
 
 ---
 
-## Penjelasan Singkat
+## ❓ FAQ Interaktif
 
-- **Nebula** adalah pembungkus Baileys siap pakai, tanpa class.
+- **Q:** Apakah bisa custom nama auth dan mode command di CJS?
+  - **A:** Ya! Cukup isi argumen saat `createNebula('NamaFolderAuth', 'case')`.
+
+- **Q:** Apakah config.js harus di-edit?
+  - **A:** Wajib! Isi owner dan prefix sesuai kebutuhan Anda.
+
+- **Q:** Bisa import tanpa `/index.js` atau `/index.cjs`?
+  - **A:** Bisa! Cukup `import createNebula from 'matzzdev-nebula'` atau `require('matzzdev-nebula')`.
+
+- **Q:** Bagaimana handle pesan masuk?
+  - **A:** Gunakan `nebula.on('messages.upsert', handler)`.
+
+---
+
+## 📝 Penjelasan Singkat
+
+- **Nebula** = wrapper Baileys siap pakai, tanpa class ribet.
 - **Event `connection.update`** otomatis di-handle, gunakan `setConnectionLogHandler` untuk log custom.
 - **Mode `case`**: cukup buat file `case.js` dan daftarkan fitur bot di sana.
 - **Logger**: Semua log penting langsung ke console.
 
 ---
 
-Lisensi: MIT
+## ⚖️ Lisensi
+
+MIT License — by MatzzDev
+
+---
+
+**Butuh bantuan?**  
+Buka [issues](https://github.com/MatzzAlwaysLearn/matzzdev-nebula/issues) atau join komunitas!
