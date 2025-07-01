@@ -1,0 +1,23 @@
+{
+  "name": "matzzdev-nebula",
+  "version": "1.0.0",
+  "description": "Baileys",
+  "homepage": "https://github.com/MatzzAlwaysLearn/matzzdev-nebula#readme",
+  "bugs": {
+    "url": "https://github.com/MatzzAlwaysLearn/matzzdev-nebula/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MatzzAlwaysLearn/matzzdev-nebula.git"
+  },
+  "license": "MIT",
+  "author": "MatzzDev",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ."
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.18"
+  }
+}
