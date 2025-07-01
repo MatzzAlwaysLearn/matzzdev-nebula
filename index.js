@@ -121,6 +121,8 @@ class Nebula {
     }
 }
 
+export default Nebula;
+
 // Contoh penggunaan super gampang:
 // const nebula = new Nebula();
 // nebula.on('messages.upsert', msg => console.log(msg));
