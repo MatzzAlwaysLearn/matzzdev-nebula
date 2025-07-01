@@ -29,11 +29,6 @@ class Nebula {
         this.init();
     }
 
-    /**
-     * Deteksi dan load mode command (case/plugin).
-     * Untuk mode 'case', otomatis require file 'case.js' jika ada.
-     * Untuk mode 'plugin', bisa dikembangkan sesuai kebutuhan.
-     */
     _loadCommandMode() {
         if (this.commandMode === 'case') {
             try {
@@ -42,48 +37,35 @@ class Nebula {
                     require(casePath)(this);
                 }
             } catch (e) {
-                this.logger.warn('File case.js tidak ditemukan atau error:', e.message);
+                this.logger.warn('case.js not found or error: ' + e.message);
             }
         } else if (this.commandMode === 'plugin') {
-            // Mode plugin: bisa dikembangkan untuk load plugin dari folder tertentu
-            // Contoh: this._loadPlugins();
+            // Plugin mode: extend here if needed
         }
     }
 
-    /**
-     * Daftarkan event listener dengan cara super gampang.
-     * Bisa: nebula.on('event', handler)
-     * Bisa: nebula.on({ event1: handler1, event2: handler2 })
-     * Bisa: await nebula.ready(); lalu akses nebula.socket
-     */
     on(event, handler) {
         if (typeof event === 'object' && event !== null) {
             Object.entries(event).forEach(([ev, fn]) => this.on(ev, fn));
             return;
         }
-        // Jika socket sudah siap, langsung daftarkan
+        if (event === 'connection.update') {
+            throw new Error("Event 'connection.update' is handled by system and cannot be overridden.");
+        }
         if (this.socket) {
             this.socket.ev.on(event, handler);
         } else {
-            // Daftarkan ke pending agar otomatis aktif saat socket siap
             if (!this._pendingEvents) this._pendingEvents = [];
             this._pendingEvents.push([event, handler]);
         }
     }
 
-    /**
-     * Hapus event listener.
-     */
     off(event, handler) {
         if (this.socket) {
             this.socket.ev.off(event, handler);
         }
     }
 
-    /**
-     * Promise yang resolve saat socket siap.
-     * Contoh: await nebula.ready();
-     */
     ready() {
         return this._ready;
     }
@@ -102,7 +84,19 @@ class Nebula {
         }
         this.socket = makeWASocket.default(socketConfig);
 
-        // Daftarkan event yang sempat pending sebelum socket siap
+        this.socket.ev.on('connection.update', (update) => {
+            if (update.connection === 'open') {
+                this.logger.info('WhatsApp connection established!');
+            } else if (update.connection === 'close') {
+                this.logger.warn('WhatsApp connection closed.');
+                const reason = update.lastDisconnect?.error?.output?.statusCode || update.lastDisconnect?.error?.message;
+                if (reason) {
+                    this.logger.warn(`Disconnect reason: ${reason}, restarting...`);
+                    setTimeout(() => this.init(), 2000);
+                }
+            }
+        });
+
         if (this._pendingEvents && this._pendingEvents.length) {
             this._pendingEvents.forEach(([event, handler]) => {
                 this.socket.ev.on(event, handler);
@@ -123,8 +117,9 @@ class Nebula {
 
 export default Nebula;
 
-// Contoh penggunaan super gampang:
-// const nebula = new Nebula();
-// nebula.on('messages.upsert', msg => console.log(msg));
-// nebula.on({ 'connection.update': update => console.log(update) });
-// await nebula.ready(); // jika ingin akses nebula.socket langsung setelah siap
+/* 
+Usage example:
+const nebula = new Nebula();
+nebula.on('messages.upsert', msg => console.log(msg));
+await nebula.ready();
+*/
