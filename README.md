@@ -105,7 +105,8 @@ nebula.on('messages.upsert', async (msg) => {
 
 ## Konfigurasi
 
-Saat pertama kali dijalankan, file `config.js` akan otomatis dibuat. Silakan edit file tersebut untuk mengatur owner, prefix, dan konfigurasi lain.
+Saat pertama kali dijalankan, file `config.js` akan otomatis dibuat di folder project Anda (bukan di dalam folder module).  
+Silakan edit file tersebut untuk mengatur owner, prefix, dan konfigurasi lain sesuai kebutuhan Anda.
 
 ## Cara Menggunakan Serialize
 

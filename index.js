@@ -19,10 +19,14 @@ const question = (query) => {
     });
 };
 
-const configPath = path.join(process.cwd(), 'config.js');
+// Buat config.js di folder project pengguna (bukan di folder module)
+const userCwd = process.cwd();
+const configPath = path.join(userCwd, 'config.js');
+
+// Cegah error import config.js jika belum ada, buat otomatis lalu exit agar user edit dulu
 if (!fs.existsSync(configPath)) {
     const defaultConfig = `
-export default config = {
+export default {
   owner: ['628xxxxxxx'], // Ganti dengan nomor WhatsApp owner WAJIB
   prefix: {
     listPrefix: ['#', '!', '/', '.'], // Daftar prefix yang digunakan
@@ -35,11 +39,13 @@ export default config = {
 };
 `.trimStart();
     fs.writeFileSync(configPath, defaultConfig, 'utf8');
-    console.log('[CONFIG] File config.js berhasil dibuat. Silakan edit sesuai kebutuhan Anda.');
+    console.log('\x1b[33m[CONFIG]\x1b[0m File config.js berhasil dibuat di folder project Anda.');
+    console.log('\x1b[36m[CONFIG]\x1b[0m Silakan edit config.js terlebih dahulu sebelum menjalankan ulang bot!');
+    process.exit(0);
 }
 
-// Import config dari config.js
-import config from './config.js';
+// Import config dari config.js di folder project pengguna
+import config from path.isAbsolute(configPath) ? `file://${configPath}` : `./config.js`;
 
 async function createNebula(authName = 'Nebula', commandMode = 'case') {
     const { state, saveCreds } = await useMultiFileAuthState(authName);
