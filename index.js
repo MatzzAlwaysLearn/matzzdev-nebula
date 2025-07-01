@@ -4,6 +4,7 @@ import fs from 'fs';
 import readline from 'readline';
 import P from 'pino';
 import Serialize from './lib/serialize.js';
+import { pathToFileURL } from 'url';
 
 const question = (query) => {
     return new Promise((resolve) => {
@@ -45,7 +46,15 @@ export default {
 }
 
 // Import config dari config.js di folder project pengguna
-import config from path.isAbsolute(configPath) ? `file://${configPath}` : `./config.js`;
+// Perbaiki: dynamic import harus async dan gunakan URL absolut
+let config;
+const configImportPath = pathToFileURL(configPath).href;
+try {
+    config = (await import(configImportPath)).default;
+} catch (e) {
+    console.error('\x1b[31m[CONFIG]\x1b[0m Gagal mengimpor config.js:', e);
+    process.exit(1);
+}
 
 async function createNebula(authName = 'Nebula', commandMode = 'case') {
     const { state, saveCreds } = await useMultiFileAuthState(authName);
