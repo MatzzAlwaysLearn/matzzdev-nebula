@@ -100,7 +100,7 @@ class Nebula {
         if (this.number && !printQR) {
             socketConfig.number = this.number;
         }
-        this.socket = makeWASocket(socketConfig);
+        this.socket = makeWASocket.default(socketConfig);
 
         // Daftarkan event yang sempat pending sebelum socket siap
         if (this._pendingEvents && this._pendingEvents.length) {
