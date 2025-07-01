@@ -22,7 +22,7 @@ const question = (query) => {
 const configPath = path.join(process.cwd(), 'config.js');
 if (!fs.existsSync(configPath)) {
     const defaultConfig = `
-export default {
+export default config = {
   owner: ['628xxxxxxx'], // Ganti dengan nomor WhatsApp owner WAJIB
   prefix: {
     listPrefix: ['#', '!', '/', '.'], // Daftar prefix yang digunakan

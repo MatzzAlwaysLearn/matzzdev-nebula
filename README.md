@@ -103,6 +103,47 @@ nebula.on('messages.upsert', async (msg) => {
 
 ---
 
+## Konfigurasi
+
+Saat pertama kali dijalankan, file `config.js` akan otomatis dibuat. Silakan edit file tersebut untuk mengatur owner, prefix, dan konfigurasi lain.
+
+## Cara Menggunakan Serialize
+
+Untuk memproses pesan WhatsApp, gunakan modul `Serialize` (akses langsung dari `nebula.smsg`) agar pesan lebih mudah di-handle di command handler/case.
+
+### Contoh Penggunaan di Handler/Case
+
+```js
+const nebula = await createNebula('MySession', 'case');
+import config from './config.js'
+const sock = nebula.socket
+// Tidak perlu import Serialize, cukup akses dari nebula.smsg
+export default function handler(nebula) {
+  nebula.on('messages.upsert', async (msg) => {
+    // Ambil pesan pertama (atau sesuaikan dengan kebutuhan)
+    const m = msg.messages[0];
+    // Buat objek serialize
+    const sMsg = new nebula.smsg(m, sock, config);
+
+    // Contoh penggunaan:
+    if (sMsg.isCmd) {
+      if (sMsg.command === 'ping') {
+        await sMsg.reply('Pong!');
+      }
+      // hanya contoh gunakan logika anda sendiri
+    }
+  });
+}
+```
+
+### Penjelasan
+
+- `Serialize` bisa diakses langsung dari `nebula.smsg`.
+- Menerima 3 parameter: pesan, socket (conn), dan config.
+- Prefix dan otomatis terdeteksi dari config.
+
+---
+
 ## Penjelasan Singkat
 
 - **Nebula** adalah pembungkus Baileys siap pakai, tanpa class.
