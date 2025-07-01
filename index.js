@@ -129,7 +129,6 @@ async function createNebula(authName = 'Nebula', commandMode = 'case') {
         };
 
         log(`[CONNECTION] Status: ${update.connection || 'unknown'}`, 'info');
-        if (update.qr && !number) log('[CONNECTION] QR code received', 'info');
         if (update.isNewLogin) log('[CONNECTION] New login detected', 'info');
         if (update.lastDisconnect) {
             log(`[CONNECTION] Last disconnect: ${JSON.stringify(update.lastDisconnect, null, 2)}`, 'warn');
