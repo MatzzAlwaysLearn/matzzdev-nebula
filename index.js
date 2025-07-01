@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import readline from 'readline';
 import P from 'pino';
+import Serialize from './lib/serialize.js';
 
 const question = (query) => {
     return new Promise((resolve) => {
@@ -17,6 +18,28 @@ const question = (query) => {
         });
     });
 };
+
+const configPath = path.join(process.cwd(), 'config.js');
+if (!fs.existsSync(configPath)) {
+    const defaultConfig = `
+export default {
+  owner: ['628xxxxxxx'], // Ganti dengan nomor WhatsApp owner WAJIB
+  prefix: {
+    listPrefix: ['#', '!', '/', '.'], // Daftar prefix yang digunakan
+    // noPrefix: true // Jika ingin mengaktifkan mode tanpa prefix, ubah ke true
+    // Jika ingin menggunakan prefix, biarkan noPrefix tetap false
+    // tambahkan prefix sesuai kebutuhan
+    noPrefix: false
+  }
+  // Tambahkan konfigurasi lain di sini
+};
+`.trimStart();
+    fs.writeFileSync(configPath, defaultConfig, 'utf8');
+    console.log('[CONFIG] File config.js berhasil dibuat. Silakan edit sesuai kebutuhan Anda.');
+}
+
+// Import config dari config.js
+import config from './config.js';
 
 async function createNebula(authName = 'Nebula', commandMode = 'case') {
     const { state, saveCreds } = await useMultiFileAuthState(authName);
@@ -163,7 +186,9 @@ async function createNebula(authName = 'Nebula', commandMode = 'case') {
         get number() { return number; },
         get commandMode() { return commandMode; },
         get commandDetect() { return commandDetect; },
-        get listPrefix() { return listPrefix; },
+        get listPrefix() { return config.prefix.listPrefix; },
+        get config() { return config; },
+        get smsg() { return Serialize; }
     };
 
     _loadCommandMode(nebula);
