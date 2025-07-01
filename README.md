@@ -1,7 +1,7 @@
 # 🚀 Nebula WhatsApp Bot Module
 
 **Versi:** 1.0.2  
-Nebula adalah modul WhatsApp multi-device berbasis [@whiskeysockets/baileys](https://github.com/WhiskeySockets/Baileys) yang dirancang agar mudah digunakan baik untuk pemula maupun developer lanjutan.
+Nebula adalah modul WhatsApp multi-device berbasis [@whiskeysockets/baileys](https://github.com/WhiskeySockets/Baileys) yang mudah digunakan untuk pemula maupun developer lanjutan.
 
 ---
 
@@ -50,6 +50,7 @@ const nebula = await createNebula('MySession', 'case');
 ```
 - **Argumen 1:** Nama folder auth (bebas, contoh: `'MySession'`)
 - **Argumen 2:** Mode command (default: `'case'`)
+- **Argumen 3 (opsional):** `options` (lihat bagian log pairing code)
 
 ---
 
@@ -174,6 +175,34 @@ nebula.on('messages.upsert', async (msg) => {
     }
 });
 ```
+
+---
+
+## 📝 Custom Log Pairing Code (Opsional)
+
+Anda bisa mengkustomisasi log saat pairing code WhatsApp muncul.  
+Jika tidak diisi, akan otomatis menggunakan log default.
+
+```js
+// ESM
+import createNebula from 'matzzdev-nebula';
+const nebula = await createNebula('MySession', 'case', {
+    logPairingCode: (code, number) => {
+        console.log('Kode pairing untuk', number, 'adalah:', code);
+    }
+});
+
+// CJS
+const createNebula = require('matzzdev-nebula');
+(async () => {
+    const nebula = await createNebula('MySession', 'case', {
+        logPairingCode: (code, number) => {
+            console.log('Kode pairing:', code, 'untuk nomor:', number);
+        }
+    });
+})();
+```
+- Jika tidak ingin custom, cukup panggil tanpa argumen ketiga.
 
 ---
 

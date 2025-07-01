@@ -50,7 +50,7 @@ try {
     process.exit(1);
 }
 
-async function createNebula(authName = 'Nebula', commandMode = 'case') {
+async function createNebula(authName = 'Nebula', commandMode = 'case', options = {}) {
     const { state, saveCreds } = await useMultiFileAuthState(authName);
     const socketConfig = {
         auth: state,
@@ -61,6 +61,12 @@ async function createNebula(authName = 'Nebula', commandMode = 'case') {
         generateHighQualityLinkPreview: true,
     };
     const socket = await makeWASocket.default(socketConfig);
+
+    // Tambahkan custom log pairing code
+    const logPairingCode = typeof options.logPairingCode === 'function'
+        ? options.logPairingCode
+        : (code, number) => console.log(`[CONNECTION] Pairing code: ${code}`);
+
     if (
         !(socket.authState?.creds?.me) &&
         !(socket.authState?.creds?.registered)
@@ -68,7 +74,7 @@ async function createNebula(authName = 'Nebula', commandMode = 'case') {
         try {
             const number = await question('Masukkan nomor WhatsApp untuk pairing (misal: 62895406828812): ');
             const code = await socket.requestPairingCode(number);
-            console.log(`[CONNECTION] Pairing code: ${code}`);
+            logPairingCode(code, number);
         } catch (e) {
             console.warn(`[CONNECTION] Failed to get pairing code: ${e}`);
         }
