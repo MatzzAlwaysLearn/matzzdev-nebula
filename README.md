@@ -4,6 +4,14 @@ Nebula adalah modul WhatsApp multi-device berbasis [@whiskeysockets/baileys](htt
 
 ---
 
+## Instalasi
+
+```bash
+npm install matzzdev-nebula
+```
+
+---
+
 ## Fitur Utama
 
 - **Multi-auth**: Bisa multi session dengan nama folder auth yang fleksibel.
