@@ -111,7 +111,7 @@ Saat pertama kali dijalankan, file `config.js` akan otomatis dibuat. Silakan edi
 
 Untuk memproses pesan WhatsApp, gunakan modul `Serialize` (akses langsung dari `nebula.smsg`) agar pesan lebih mudah di-handle di command handler/case.
 
-### Contoh Penggunaan di Handler/Case
+### Contoh Penggunaan di main file
 
 ```js
 const nebula = await createNebula('MySession', 'case');
