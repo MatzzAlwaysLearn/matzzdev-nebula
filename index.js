@@ -25,6 +25,11 @@ class Nebula {
         this.eventHandlers = {};
         this._pendingEvents = [];
         this._ready = new Promise(resolve => { this._resolveReady = resolve; });
+        this._connectionLogHandler = null;
+        this.state = null;
+        this.saveCreds = null;
+        this.listPrefix = ['#', '!', '/', '.'];
+        this.commandDetect = null;
         this._loadCommandMode();
         this.init();
     }
@@ -42,6 +47,14 @@ class Nebula {
         } else if (this.commandMode === 'plugin') {
             // Plugin mode: extend here if needed
         }
+   }
+
+    /**
+     * Set custom connection log handler.
+     * @param {function} handler - Receives (update, defaultLogger)
+     */
+    setConnectionLogHandler(handler) {
+        this._connectionLogHandler = handler;
     }
 
     on(event, handler) {
@@ -50,7 +63,7 @@ class Nebula {
             return;
         }
         if (event === 'connection.update') {
-            throw new Error("Event 'connection.update' is handled by system and cannot be overridden.");
+            throw new Error("Event 'connection.update' is handled by system and cannot be overridden. Use setConnectionLogHandler(fn) to customize log output.");
         }
         if (this.socket) {
             this.socket.ev.on(event, handler);
@@ -70,9 +83,31 @@ class Nebula {
         return this._ready;
     }
 
+    /**
+     * Utility to detect command from a message using listPrefix and regex.
+     * Call this in your message handler to set nebula.commandDetect.
+     * @param {string} text
+     * @returns {string|null} command name or null
+     */
+    detectCommand(text) {
+        if (!text || typeof text !== 'string') return null;
+        for (const prefix of this.listPrefix) {
+            const regex = new RegExp(`^\\${prefix}(\\w+)`, 'i');
+            const match = text.match(regex);
+            if (match) {
+                this.commandDetect = match[1].toLowerCase();
+                return this.commandDetect;
+            }
+        }
+        this.commandDetect = null;
+        return null;
+    }
+
     async init() {
         const printQR = !this.number;
         const { state, saveCreds } = await useMultiFileAuthState(this.authName);
+        this.state = state;
+        this.saveCreds = saveCreds;
         const socketConfig = {
             auth: state,
             printQRInTerminal: printQR,
@@ -85,14 +120,37 @@ class Nebula {
         this.socket = makeWASocket.default(socketConfig);
 
         this.socket.ev.on('connection.update', (update) => {
-            if (update.connection === 'open') {
-                this.logger.info('WhatsApp connection established!');
-            } else if (update.connection === 'close') {
-                this.logger.warn('WhatsApp connection closed.');
+            const log = this.logger;
+            const defaultLogger = (msg, level = 'info') => {
+                if (typeof log[level] === 'function') log[level](msg);
+                else log.info(msg);
+            };
+
+            defaultLogger(`[CONNECTION] Status: ${update.connection || 'unknown'}`, 'info');
+            // Only log QR if phone number is not provided or falsy
+            if (update.qr && !this.number) defaultLogger('[CONNECTION] QR code received', 'info');
+            if (update.pairingCode) defaultLogger(`[CONNECTION] Pairing code: ${update.pairingCode}`, 'info');
+            if (update.isNewLogin) defaultLogger('[CONNECTION] New login detected', 'info');
+            if (update.lastDisconnect) {
+                defaultLogger(`[CONNECTION] Last disconnect: ${JSON.stringify(update.lastDisconnect, null, 2)}`, 'warn');
                 const reason = update.lastDisconnect?.error?.output?.statusCode || update.lastDisconnect?.error?.message;
                 if (reason) {
-                    this.logger.warn(`Disconnect reason: ${reason}, restarting...`);
+                    defaultLogger(`[CONNECTION] Disconnect reason: ${reason}, restarting...`, 'warn');
                     setTimeout(() => this.init(), 2000);
+                }
+            }
+            if (update.connection === 'open') {
+                defaultLogger('[CONNECTION] WhatsApp connection established!', 'info');
+            } else if (update.connection === 'close') {
+                defaultLogger('[CONNECTION] WhatsApp connection closed.', 'warn');
+            }
+
+            // Allow user to customize connection log
+            if (typeof this._connectionLogHandler === 'function') {
+                try {
+                    this._connectionLogHandler(update, defaultLogger);
+                } catch (e) {
+                    defaultLogger(`[CONNECTION] Custom log handler error: ${e.message}`, 'error');
                 }
             }
         });
@@ -116,10 +174,3 @@ class Nebula {
 }
 
 export default Nebula;
-
-/* 
-Usage example:
-const nebula = new Nebula();
-nebula.on('messages.upsert', msg => console.log(msg));
-await nebula.ready();
-*/
