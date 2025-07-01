@@ -145,6 +145,20 @@ export default function handler(nebula) {
 
 ---
 
+## Cara Import (ESM & CJS)
+
+**ESM (rekomendasi, .mjs atau package.json type: module):**
+```js
+import createNebula from 'matzzdev-nebula';
+```
+
+**CJS (require):**
+```js
+const createNebula = require('matzzdev-nebula');
+```
+
+---
+
 ## Penjelasan Singkat
 
 - **Nebula** adalah pembungkus Baileys siap pakai, tanpa class.

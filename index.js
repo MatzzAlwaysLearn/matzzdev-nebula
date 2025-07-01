@@ -20,23 +20,19 @@ const question = (query) => {
     });
 };
 
-// Buat config.js di folder project pengguna (bukan di folder module)
 const userCwd = process.cwd();
 const configPath = path.join(userCwd, 'config.js');
 
-// Cegah error import config.js jika belum ada, buat otomatis lalu exit agar user edit dulu
 if (!fs.existsSync(configPath)) {
     const defaultConfig = `
 export default {
-  owner: ['628xxxxxxx'], // Ganti dengan nomor WhatsApp owner WAJIB
+  owner: ['628xxxxxxx'],  // Ganti dengan nomor WhatsApp Anda Wajib!!!
   prefix: {
-    listPrefix: ['#', '!', '/', '.'], // Daftar prefix yang digunakan
-    // noPrefix: true // Jika ingin mengaktifkan mode tanpa prefix, ubah ke true
-    // Jika ingin menggunakan prefix, biarkan noPrefix tetap false
-    // tambahkan prefix sesuai kebutuhan
-    noPrefix: false
+    listPrefix: ['#', '!', '/', '.'], // tambahkan prefix yang ingin digunakan
+    // Contoh: ['#', '!', '/', '.', '*'] sehingga bot dapat mendeteksi prefix tersebut
+    // Jika ingin menambahkan prefix lain, cukup tambahkan di array ini
+    noPrefix: false // Jika true, bot tidak akan mendeteksi prefix pada pesan
   }
-  // Tambahkan konfigurasi lain di sini
 };
 `.trimStart();
     fs.writeFileSync(configPath, defaultConfig, 'utf8');
@@ -45,8 +41,6 @@ export default {
     process.exit(0);
 }
 
-// Import config dari config.js di folder project pengguna
-// Perbaiki: dynamic import harus async dan gunakan URL absolut
 let config;
 const configImportPath = pathToFileURL(configPath).href;
 try {
@@ -80,34 +74,11 @@ async function createNebula(authName = 'Nebula', commandMode = 'case') {
         }
     }
 
-    // --- Struktur & API ---
     let _pendingEvents = [];
     let _connectionLogHandler = null;
     let commandDetect = null;
     let listPrefix = ['#', '!', '/', '.'];
     let nebula = null;
-
-    function _loadCommandMode(nebulaInstance) {
-        if (commandMode === 'case') {
-            try {
-                const casePath = path.join(process.cwd(), 'case.js');
-                if (fs.existsSync(casePath)) {
-                    // Gunakan dynamic import agar support ESM, bukan require
-                    import(casePath).then((caseModule) => {
-                        if (typeof caseModule.default === 'function') {
-                            caseModule.default(nebulaInstance);
-                        } else if (typeof caseModule === 'function') {
-                            caseModule(nebulaInstance);
-                        }
-                    }).catch((e) => {
-                        console.warn('case.js not found or error: ' + e.message);
-                    });
-                }
-            } catch (e) {
-                console.warn('case.js not found or error: ' + e.message);
-            }
-        }
-    }
 
     function setConnectionLogHandler(handler) {
         _connectionLogHandler = handler;
@@ -206,9 +177,11 @@ async function createNebula(authName = 'Nebula', commandMode = 'case') {
         get smsg() { return Serialize; }
     };
 
-    _loadCommandMode(nebula);
-
     return nebula;
 }
 
 export default createNebula;
+
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+    module.exports = createNebula;
+}
