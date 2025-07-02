@@ -7,14 +7,14 @@ Nebula adalah modul WhatsApp multi-device berbasis [@whiskeysockets/baileys](htt
 
 ## 🔥 Fitur Utama
 
-- **Multi-auth**: Multi session, nama folder auth fleksibel.
-- **Event Listener Simpel**: Daftarkan event WhatsApp dengan `.on()`.
-- **Custom Connection Log**: Kustomisasi log koneksi WhatsApp.
-- **Mode Command**: Pilih mode `case` (file case.js).
-- **Akses State & saveCreds**: Mudah dari instance Nebula.
-- **Restart Otomatis**: Disconnect/error? Bot auto-reconnect!
-- **Logger Lengkap**: Semua status koneksi dicatat detail.
-- **Tanpa Class Ribet**: API berbasis function & object.
+- Multi-auth: Multi session, nama folder auth fleksibel.
+- Event Listener Simpel: Daftarkan event WhatsApp dengan `.on()`.
+- Custom Connection Log: Kustomisasi log koneksi WhatsApp.
+- Mode Command: Pilih mode `case` (default) atau `plugin` (manual).
+- Akses State & saveCreds: Mudah dari instance Nebula.
+- Restart Otomatis: Disconnect/error? Bot auto-reconnect!
+- Logger Lengkap: Semua status koneksi dicatat detail.
+- Tanpa Class Ribet: API berbasis function & object.
 
 ---
 
@@ -32,12 +32,12 @@ npm install matzzdev-nebula
 
 #### ESM (direkomendasikan)
 ```js
-import createNebula from 'matzzdev-nebula';
+import createNebula from 'matzzdev-nebula'
 ```
 
 #### CJS (require)
 ```js
-const createNebula = require('matzzdev-nebula');
+const createNebula = require('matzzdev-nebula')
 ```
 
 ---
@@ -45,12 +45,19 @@ const createNebula = require('matzzdev-nebula');
 ### 2. Membuat Instance & Start
 
 ```js
-const nebula = await createNebula('MySession', 'case');
-// Bot langsung aktif setelah await!
+// ESM
+import createNebula from 'matzzdev-nebula'
+const nebula = await createNebula('MySession')
+
+// CJS
+const createNebula = require('matzzdev-nebula')
+;(async () => {
+    const nebula = await createNebula('MySession')
+})()
 ```
-- **Argumen 1:** Nama folder auth (bebas, contoh: `'MySession'`)
-- **Argumen 2:** Mode command (default: `'case'`)
-- **Argumen 3 (opsional):** `options` (lihat bagian log pairing code)
+- Argumen 1: Nama folder auth (bebas, contoh: `'MySession'`)
+- Argumen 2: Mode command (`'case'` (default) atau `'plugin'`)
+- Argumen 3 (opsional): `options` (lihat bagian log pairing code)
 
 ---
 
@@ -58,14 +65,14 @@ const nebula = await createNebula('MySession', 'case');
 
 ```js
 nebula.on('messages.upsert', msg => {
-    console.log('Pesan baru:', msg);
-});
+    console.log('Pesan baru:', msg)
+})
 
 // Atau banyak event sekaligus:
 nebula.on({
     'messages.upsert': msg => { /* ... */ },
     'creds.update': creds => { /* ... */ }
-});
+})
 ```
 
 ---
@@ -75,25 +82,10 @@ nebula.on({
 ```js
 nebula.setConnectionLogHandler((update, log) => {
     if (update.connection === 'open') {
-        log('Custom: Terhubung!', 'info');
+        log('Custom: Terhubung!', 'info')
     }
-});
+})
 ```
-
----
-
-### 5. Mode Command 'case'
-
-- Buat file `case.js` di folder project Anda.
-- Export function yang menerima instance Nebula.
-- Contoh `case.js`:
-    ```js
-    export default function(nebula) {
-        nebula.on('messages.upsert', msg => {
-            // Logika bot kamu di sini
-        });
-    }
-    ```
 
 ---
 
@@ -109,33 +101,33 @@ nebula.setConnectionLogHandler((update, log) => {
         listPrefix: ['#', '!', '/', '.'],
         noPrefix: false
       }
-    };
+    }
     ```
 
 ---
 
-## 🧑‍💻 Command Detect
+## 🧑‍💻 Deteksi Command
 
 ### Deteksi Command Otomatis
 
 ```js
 nebula.on('messages.upsert', async (msg) => {
-    const m = msg.messages?.[0];
-    if (!m?.message?.conversation) return;
-    const text = m.message.conversation;
+    const m = msg.messages?.[0]
+    if (!m?.message?.conversation) return
+    const text = m.message.conversation
 
-    nebula.detectCommand(text);
+    nebula.detectCommand(text)
 
     if (nebula.commandDetect) {
-        console.log('Command terdeteksi:', nebula.commandDetect);
+        console.log('Command terdeteksi:', nebula.commandDetect)
         if (nebula.commandDetect === 'hai') {
-            nebula.socket.sendMessage(m.key.remoteJid, { text: 'Halo juga!' }, { quoted: m });
+            nebula.socket.sendMessage(m.key.remoteJid, { text: 'Halo juga!' }, { quoted: m })
         }
     }
-});
+})
 ```
-- **Prefix default:** `#`, `!`, `/`, `.`
-- **Tambah prefix:** `nebula.listPrefix.push('$')`
+- Prefix default: `#`, `!`, `/`, `.`
+- Tambah prefix: `nebula.listPrefix.push('$')`
 
 ---
 
@@ -148,32 +140,32 @@ Agar pesan WhatsApp jadi lebih mudah diolah di handler/command.
 
 ```js
 // ESM
-import createNebula from 'matzzdev-nebula';
-const nebula = await createNebula();
-const sMsg = new nebula.smsg(msg, nebula.socket, nebula.config);
+import createNebula from 'matzzdev-nebula'
+const nebula = await createNebula()
+const sMsg = new nebula.smsg(msg, nebula.socket, nebula.config)
 
 // CJS
-const createNebula = require('matzzdev-nebula');
-(async () => {
-    const nebula = await createNebula();
-    const sMsg = new nebula.smsg(msg, nebula.socket, nebula.config);
-})();
+const createNebula = require('matzzdev-nebula')
+;(async () => {
+    const nebula = await createNebula()
+    const sMsg = new nebula.smsg(msg, nebula.socket, nebula.config)
+})()
 ```
 
 ### Contoh di Handler
 
 ```js
 nebula.on('messages.upsert', async (msg) => {
-    const m = msg.messages[0];
-    const sMsg = new nebula.smsg(m, nebula.socket, nebula.config);
+    const m = msg.messages[0]
+    const sMsg = new nebula.smsg(m, nebula.socket, nebula.config)
 
     if (sMsg.isCmd) {
         if (sMsg.command === 'ping') {
-            await sMsg.reply('Pong!');
+            await sMsg.reply('Pong!')
         }
         // Tambahkan command lain sesuai kebutuhan
     }
-});
+})
 ```
 
 ---
@@ -185,57 +177,252 @@ Jika tidak diisi, akan otomatis menggunakan log default.
 
 ```js
 // ESM
-import createNebula from 'matzzdev-nebula';
+import createNebula from 'matzzdev-nebula'
 const nebula = await createNebula('MySession', 'case', {
     logPairingCode: (code, number) => {
-        console.log('Kode pairing untuk', number, 'adalah:', code);
+        console.log('Kode pairing untuk', number, 'adalah:', code)
     }
-});
+})
 
 // CJS
-const createNebula = require('matzzdev-nebula');
-(async () => {
+const createNebula = require('matzzdev-nebula')
+;(async () => {
     const nebula = await createNebula('MySession', 'case', {
         logPairingCode: (code, number) => {
-            console.log('Kode pairing:', code, 'untuk nomor:', number);
+            console.log('Kode pairing:', code, 'untuk nomor:', number)
         }
-    });
-})();
+    })
+})()
 ```
 - Jika tidak ingin custom, cukup panggil tanpa argumen ketiga.
 
 ---
 
-## ❓ FAQ Interaktif
+# Sistem Plugin Nebula
 
-- **Q:** Apakah bisa custom nama auth dan mode command di CJS?
-  - **A:** Ya! Cukup isi argumen saat `createNebula('NamaFolderAuth', 'case')`.
+## Konsep Dasar
 
-- **Q:** Apakah config.js harus di-edit?
-  - **A:** Wajib! Isi owner dan prefix sesuai kebutuhan Anda.
-
-- **Q:** Bisa import tanpa `/index.js` atau `/index.cjs`?
-  - **A:** Bisa! Cukup `import createNebula from 'matzzdev-nebula'` atau `require('matzzdev-nebula')`.
-
-- **Q:** Bagaimana handle pesan masuk?
-  - **A:** Gunakan `nebula.on('messages.upsert', handler)`.
+Sistem plugin Nebula memungkinkan Anda menambah, mengelola, dan menjalankan fitur bot secara modular hanya dengan menambah file JavaScript di folder `plugin/`. Setiap plugin harus mengikuti struktur tertentu agar bisa dikenali dan dijalankan oleh sistem.
 
 ---
 
-## 📝 Penjelasan Singkat
+## Struktur Plugin
 
-- **Nebula** = wrapper Baileys siap pakai, tanpa class ribet.
-- **Event `connection.update`** otomatis di-handle, gunakan `setConnectionLogHandler` untuk log custom.
-- **Mode `case`**: cukup buat file `case.js` dan daftarkan fitur bot di sana.
-- **Logger**: Semua log penting langsung ke console.
+Setiap file di dalam folder `plugin/` harus mengekspor sebuah objek dengan struktur minimal seperti berikut:
+
+```js
+module.exports = {
+  type: 'command', // atau 'hook', 'event'
+  name: 'nama_command',
+  description: 'Deskripsi singkat command',
+  execute(ctx, ...args) {
+    // kode eksekusi command
+    return 'Hasil eksekusi'
+  }
+}
+```
+
+**Properti yang wajib:**
+- `type`: Jenis plugin (`command`, `hook`, atau `event`)
+- `name`: Nama unik plugin/command
+- `execute`: Fungsi yang akan dijalankan saat plugin dipanggil
+
+**Properti opsional:**
+- `description`, `usage`, `dependsOn`, `init`, `destroy`, dll.
 
 ---
 
-## ⚖️ Lisensi
+## Cara Menambah Command
 
-MIT License — by MatzzDev
+1. Buat folder `plugin/` di root project jika belum ada.
+2. Tambahkan file baru untuk command, misal `hello.js`:
+
+    ```js
+    // ESM
+    export default {
+      type: 'command',
+      name: 'hello',
+      description: 'Say hello',
+      execute(ctx) {
+        return `Hello, ${ctx.user || 'World'}!`
+      }
+    }
+
+    // CJS
+    module.exports = {
+      type: 'command',
+      name: 'hello',
+      description: 'Say hello',
+      execute(ctx) {
+        return `Hello, ${ctx.user || 'World'}!`
+      }
+    }
+    ```
+
+3. Restart bot. Command akan otomatis terdeteksi.
 
 ---
 
-**Butuh bantuan?**  
-Buka [issues](https://github.com/MatzzAlwaysLearn/matzzdev-nebula/issues) atau join komunitas!
+## Cara Menambah Hook
+
+Mulai versi terbaru, **plugin hook tidak membutuhkan properti `name`**.  
+Semua plugin dengan `type: 'hook'` akan dieksekusi terus-menerus setiap ada pesan masuk (misal pada event `messages.upsert`).
+
+### Contoh Plugin Hook
+
+```js
+// ESM
+export default {
+  type: 'hook',
+  execute(ctx, next) {
+    console.log('Log:', ctx)
+    // Bisa lanjut ke next middleware jika ingin (optional)
+    if (typeof next === 'function') next()
+  }
+}
+
+// CJS
+module.exports = {
+  type: 'hook',
+  execute(ctx, next) {
+    console.log('Log:', ctx)
+    if (typeof next === 'function') next()
+  }
+}
+```
+
+### Cara Memanggil Hook di Handler Anda
+
+Pada handler event WhatsApp (misal `messages.upsert`), panggil `nebula.executeHooks()` agar semua hook dijalankan:
+
+```js
+nebula.on('messages.upsert', async (msg) => {
+    await nebula.executeHooks(msg)
+    // Lanjutkan logika handler Anda di sini
+})
+```
+
+- **Catatan:** Anda tidak perlu mengisi `name` pada plugin hook.
+- Semua plugin hook akan dieksekusi setiap kali Anda memanggil `nebula.executeHooks()`.
+
+---
+
+## Cara Menambah Event
+
+```js
+// ESM
+export default {
+  type: 'event',
+  name: 'onStart',
+  execute() {
+    console.log('Bot started!')
+  }
+}
+
+// CJS
+module.exports = {
+  type: 'event',
+  name: 'onStart',
+  execute() {
+    console.log('Bot started!')
+  }
+}
+```
+
+---
+
+## Dependency Antar Plugin
+
+Jika plugin Anda membutuhkan plugin lain, gunakan properti `dependsOn`:
+
+```js
+module.exports = {
+  type: 'command',
+  name: 'foo',
+  dependsOn: ['bar'],
+  execute(ctx) {
+    // kode
+  }
+}
+```
+
+---
+
+## Lifecycle (Opsional)
+
+Plugin dapat memiliki fungsi `init` dan `destroy` yang akan dipanggil saat plugin di-load atau dihapus:
+
+```js
+module.exports = {
+  type: 'command',
+  name: 'foo',
+  init() {
+    // kode inisialisasi
+  },
+  destroy() {
+    // kode cleanup
+  },
+  execute(ctx) {
+    // kode utama
+  }
+}
+```
+
+---
+
+## Mode Plugin Manual (Advanced)
+
+Jika Anda ingin mendaftarkan command secara manual (tanpa file di folder plugin), gunakan mode `plugin`:
+
+```js
+// ESM
+import createNebula from 'matzzdev-nebula'
+const nebula = await createNebula('SessionName', 'plugin')
+nebula.__registerCommand({
+  type: 'command',
+  name: 'foo',
+  execute(ctx) {
+    return 'Ini command foo!'
+  }
+})
+
+// CJS
+const createNebula = require('matzzdev-nebula')
+;(async () => {
+  const nebula = await createNebula('SessionName', 'plugin')
+  nebula.__registerCommand({
+    type: 'command',
+    name: 'foo',
+    execute(ctx) {
+      return 'Ini command foo!'
+    }
+  })
+})()
+```
+
+---
+
+## Menjalankan Command
+
+Untuk menjalankan command (mode plugin/manual), gunakan:
+
+```js
+const result = await nebula.processCommand('nama_command', ctx, ...args)
+```
+
+Pada mode default (`case`), fungsi ini tidak melakukan apapun.
+
+---
+
+## Catatan
+
+- Semua plugin harus memiliki struktur `{ type, name, execute }`.
+- Untuk command WhatsApp, Anda sendiri yang harus mendeteksi dan memproses command dari pesan, lalu memanggil `processCommand` jika perlu.
+- Sistem plugin ini sangat fleksibel dan otomatis membaca semua file di folder `plugin/` sesuai tipe-nya.
+
+---
+
+## Troubleshooting
+
+- Jika plugin tidak terdeteksi, pastikan file di folder `plugin/` sudah sesuai struktur.
+- Cek error di terminal untuk pesan validasi plugin.

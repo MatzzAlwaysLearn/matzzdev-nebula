@@ -5,6 +5,7 @@ import readline from 'readline';
 import P from 'pino';
 import Serialize from './lib/serialize.js';
 import { pathToFileURL } from 'url';
+import { handleExecuteCommand } from './lib/handlerPLugin.js'
 
 const question = (query) => {
     return new Promise((resolve) => {
@@ -50,7 +51,8 @@ try {
     process.exit(1);
 }
 
-async function createNebula(authName = 'Nebula', commandMode = 'case', options = {}) {
+async function createNebula(authName = 'Nebula', commandMode, options = {}) {
+    const mode = commandMode === 'plugin' ? 'plugin' : 'case';
     const { state, saveCreds } = await useMultiFileAuthState(authName);
     const socketConfig = {
         auth: state,
@@ -62,7 +64,6 @@ async function createNebula(authName = 'Nebula', commandMode = 'case', options =
     };
     const socket = await makeWASocket.default(socketConfig);
 
-    // Tambahkan custom log pairing code
     const logPairingCode = typeof options.logPairingCode === 'function'
         ? options.logPairingCode
         : (code, number) => console.log(`[CONNECTION] Pairing code: ${code}`);
@@ -85,6 +86,37 @@ async function createNebula(authName = 'Nebula', commandMode = 'case', options =
     let commandDetect = null;
     let listPrefix = ['#', '!', '/', '.'];
     let nebula = null;
+
+    let manualCommands = [];
+
+    function __registerCommand(commandObj) {
+        if (!commandObj || commandObj.type !== 'command' || typeof commandObj.name !== 'string' || typeof commandObj.execute !== 'function') {
+            throw new Error('Invalid command object');
+        }
+        manualCommands.push(commandObj);
+    }
+
+    async function processCommand(commandName, ...args) {
+        if (mode === 'case') {
+            return;
+        } else if (mode === 'plugin') {
+            const cmd = manualCommands.find(c => c.name === commandName && c.type === 'command');
+            if (!cmd) throw new Error(`Command "${commandName}" not found`);
+            return cmd.execute(...args);
+        } else {
+            throw new Error('Unknown command mode');
+        }
+    }
+
+    // Fungsi untuk mengeksekusi semua hook (panggil manual di handler user)
+    async function executeHooks(ctx, ...args) {
+        const { handleExecuteHook } = await import('./lib/handlerPLugin.js');
+        try {
+            handleExecuteHook(ctx, ...args);
+        } catch (e) {
+            // Optional: log error hook
+        }
+    }
 
     function setConnectionLogHandler(handler) {
         _connectionLogHandler = handler;
@@ -171,17 +203,19 @@ async function createNebula(authName = 'Nebula', commandMode = 'case', options =
         on,
         off,
         detectCommand,
+        processCommand,
+        executeHooks, // panggil ini di handler messages.upsert user
         get socket() { return socket; },
         get state() { return state; },
         get saveCreds() { return saveCreds; },
         get number() { return number; },
-        get commandMode() { return commandMode; },
+        get commandMode() { return mode; },
         get commandDetect() { return commandDetect; },
         get listPrefix() { return config.prefix.listPrefix; },
         get config() { return config; },
-        get smsg() { return Serialize; }
+        get smsg() { return Serialize; },
+        __registerCommand,
     };
-
     return nebula;
 }
 
